@@ -10,28 +10,28 @@ template <class KeyType, class ValueType, class Hash = std::hash<KeyType>>
 class HashMap {
 private:
     static const size_t MAX_SIZE = 10000;
-    using my_pair = std::pair<KeyType, ValueType>;
+    using myPair = std::pair<KeyType, ValueType>;
 
-    std::list<my_pair> data[MAX_SIZE];
-    typename std::list<my_pair>::iterator endIterator;
-    std::vector<size_t> nonempty_buckets;
+    std::list<myPair> data[MAX_SIZE];
+    typename std::list<myPair>::iterator endIterator;
+    std::vector<size_t> nonemptyBuckets;
     size_t pos[MAX_SIZE];
     Hash hasher;
     size_t sz = 0;
 
-    size_t get_hash(const KeyType& x) const {
+    size_t getHash(const KeyType& x) const {
         return hasher(x) % MAX_SIZE;
     }
-    void add_bucket(size_t id) {
-        pos[id] = nonempty_buckets.size();
-        nonempty_buckets.push_back(id);
+    void addBucket(size_t id) {
+        pos[id] = nonemptyBuckets.size();
+        nonemptyBuckets.push_back(id);
     }
-    void del_bucket(size_t id) {
+    void delBucket(size_t id) {
         size_t tmp = pos[id];
-        std::swap(pos[id], pos[nonempty_buckets.back()]);
-        std::swap(nonempty_buckets[tmp], nonempty_buckets.back());
+        std::swap(pos[id], pos[nonemptyBuckets.back()]);
+        std::swap(nonemptyBuckets[tmp], nonemptyBuckets.back());
         pos[id] = 0;
-        nonempty_buckets.pop_back();
+        nonemptyBuckets.pop_back();
     }
 
 public:
@@ -42,7 +42,7 @@ public:
             insert(*first);
         }
     }
-    HashMap(const std::initializer_list<my_pair>& l, const Hash& _hasher = Hash()) : hasher(_hasher) {
+    HashMap(const std::initializer_list<myPair>& l, const Hash& _hasher = Hash()) : hasher(_hasher) {
         for (auto it = l.begin(); it != l.end(); ++it) {
             insert(*it);
         }
@@ -58,21 +58,21 @@ public:
         return hasher;
     }
 
-    void insert(const my_pair& cur) {
-        size_t hsh = get_hash(cur.first);
+    void insert(const myPair& cur) {
+        size_t hsh = getHash(cur.first);
         for (auto it = data[hsh].begin(); it != data[hsh].end(); ++it) {
             if (it->first == cur.first) {
                 return;
             }
         }
         if (data[hsh].empty()) {
-            add_bucket(hsh);
+            addBucket(hsh);
         }
         data[hsh].push_front(cur);
         ++sz;
     }
     void erase(const KeyType& key) {
-        size_t hsh = get_hash(key);
+        size_t hsh = getHash(key);
         bool is_deleted = false;
         for (auto it = data[hsh].begin(); it != data[hsh].end(); ++it) {
             if (it->first == key) {
@@ -83,7 +83,7 @@ public:
             }
         }
         if (is_deleted && data[hsh].empty()) {
-            del_bucket(hsh);
+            delBucket(hsh);
         }
     }
 
@@ -93,9 +93,9 @@ public:
     private:
         HashMap * map;
         size_t bucketId;
-        typename std::list<my_pair>::iterator posBucket;
+        typename std::list<myPair>::iterator posBucket;
 
-        std::pair<const KeyType, ValueType>* get_ptr() {
+        std::pair<const KeyType, ValueType>* getPtr() {
             std::pair<KeyType, ValueType>* ptr = &(*posBucket);
             return (std::pair<const KeyType, ValueType>*)(void*)ptr;
         }
@@ -103,19 +103,19 @@ public:
     public:
         friend class const_iterator;
         iterator() : map(nullptr), bucketId(0), posBucket() {}
-        iterator(HashMap* _map, size_t _bucketId, typename std::list<my_pair>::iterator _posBucket) : map(_map) {
+        iterator(HashMap* _map, size_t _bucketId, typename std::list<myPair>::iterator _posBucket) : map(_map) {
             bucketId = _bucketId;
             posBucket = _posBucket;
         }
         iterator& operator++() {
             ++posBucket;
-            std::list<my_pair>& tmp = map->data[map->nonempty_buckets[bucketId]];
+            std::list<myPair>& tmp = map->data[map->nonemptyBuckets[bucketId]];
             if (posBucket == tmp.end()) {
                 ++bucketId;
-                if (bucketId == map->nonempty_buckets.size()) {
+                if (bucketId == map->nonemptyBuckets.size()) {
                     posBucket = map->endIterator;
                 } else {
-                    posBucket = map->data[map->nonempty_buckets[bucketId]].begin();
+                    posBucket = map->data[map->nonemptyBuckets[bucketId]].begin();
                 }
             }
             return *this;
@@ -126,10 +126,10 @@ public:
             return tmp;
         }
         std::pair<const KeyType, ValueType>& operator*() {
-            return *get_ptr();
+            return *getPtr();
         }
         std::pair<const KeyType, ValueType>* operator->() {
-            return get_ptr();
+            return getPtr();
         }
         bool operator==(const iterator& ot) const {
             return bucketId == ot.bucketId && posBucket == ot.posBucket;
@@ -143,16 +143,16 @@ public:
     private:
         HashMap const * map;
         size_t bucketId;
-        typename std::list<my_pair>::const_iterator posBucket;
+        typename std::list<myPair>::const_iterator posBucket;
 
-        std::pair<const KeyType, ValueType>* get_ptr() const {
+        std::pair<const KeyType, ValueType>* getPtr() const {
             const std::pair<KeyType, ValueType>* ptr = &(*posBucket);
             return (std::pair<const KeyType, ValueType>*)(void*)ptr;
         }
 
     public:
         const_iterator() : map(nullptr), bucketId(0), posBucket() {}
-        const_iterator(HashMap const * _map, size_t _bucketId, typename std::list<my_pair>::const_iterator _posBucket) : map(_map) {
+        const_iterator(HashMap const * _map, size_t _bucketId, typename std::list<myPair>::const_iterator _posBucket) : map(_map) {
             bucketId = _bucketId;
             posBucket = _posBucket;
         }
@@ -162,13 +162,13 @@ public:
         }
         const_iterator& operator++() {
             ++posBucket;
-            const std::list<my_pair>& tmp = map->data[map->nonempty_buckets[bucketId]];
+            const std::list<myPair>& tmp = map->data[map->nonemptyBuckets[bucketId]];
             if (posBucket == tmp.end()) {
                 ++bucketId;
-                if (bucketId == map->nonempty_buckets.size()) {
+                if (bucketId == map->nonemptyBuckets.size()) {
                     posBucket = map->endIterator;
                 } else {
-                    posBucket = map->data[map->nonempty_buckets[bucketId]].begin();
+                    posBucket = map->data[map->nonemptyBuckets[bucketId]].begin();
                 }
             }
             return *this;
@@ -179,10 +179,10 @@ public:
             return tmp;
         }
         const std::pair<const KeyType, ValueType>& operator*() const {
-            return *get_ptr();
+            return *getPtr();
         }
         const std::pair<const KeyType, ValueType>* operator->() const {
-            return get_ptr();
+            return getPtr();
         }
         bool operator==(const const_iterator& ot) const {
             return bucketId == ot.bucketId && posBucket == ot.posBucket;
@@ -196,24 +196,24 @@ public:
         if (empty()) {
             return iterator(this, 0, endIterator);
         } else {
-            return iterator(this, 0, data[nonempty_buckets[0]].begin());
+            return iterator(this, 0, data[nonemptyBuckets[0]].begin());
         }
     }
     iterator end() {
-        return iterator(this, nonempty_buckets.size(), endIterator);
+        return iterator(this, nonemptyBuckets.size(), endIterator);
     }
     const_iterator begin() const {
         if (empty()) {
             return const_iterator(this, 0, endIterator);
         } else {
-            return const_iterator(this, 0, data[nonempty_buckets[0]].begin());
+            return const_iterator(this, 0, data[nonemptyBuckets[0]].begin());
         }
     }
     const_iterator end() const {
-        return const_iterator(this, nonempty_buckets.size(), endIterator);
+        return const_iterator(this, nonemptyBuckets.size(), endIterator);
     }
     iterator find(const KeyType& key) {
-        size_t hsh = get_hash(key);
+        size_t hsh = getHash(key);
         for (auto it = data[hsh].begin(); it != data[hsh].end(); ++it) {
             if (it->first == key) {
                 return iterator(this, pos[hsh], it);
@@ -222,7 +222,7 @@ public:
         return end();
     }
     const_iterator find(const KeyType& key) const {
-        size_t hsh = get_hash(key);
+        size_t hsh = getHash(key);
         for (auto it = data[hsh].begin(); it != data[hsh].end(); ++it) {
             if (it->first == key) {
                 return const_iterator(this, pos[hsh], it);
@@ -247,11 +247,11 @@ public:
     }
     void clear() {
         sz = 0;
-        for (size_t i = 0; i != nonempty_buckets.size(); ++i) {
-            size_t idx = nonempty_buckets[i];
+        for (size_t i = 0; i != nonemptyBuckets.size(); ++i) {
+            size_t idx = nonemptyBuckets[i];
             pos[idx] = 0;
             data[idx].clear();
         }
-        nonempty_buckets.clear();
+        nonemptyBuckets.clear();
     }
 };
